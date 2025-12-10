@@ -18,6 +18,7 @@ from .utils import (
 def extract_non_overlapping_blocks(coeffs_rgb: list[torch.Tensor], 
                                      block_size: int) -> tuple[torch.Tensor, list]:
     h, w = coeffs_rgb[0].shape
+    num_channels = len(coeffs_rgb)  # Get actual number of channels
     
     # Calculate number of blocks that fit
     n_blocks_h = h // block_size
@@ -32,7 +33,7 @@ def extract_non_overlapping_blocks(coeffs_rgb: list[torch.Tensor],
             block_j = j * block_size
             
             block_features = []
-            for c in range(3):
+            for c in range(num_channels):  # Use actual channel count
                 block = coeffs_rgb[c][block_i:block_i+block_size, block_j:block_j+block_size]
                 block_features.append(block.flatten())
             
@@ -50,14 +51,17 @@ def reconstruct_from__nonoverlapping_blocks(blocks: torch.Tensor,
                                                block_size: int,
                                                device='cpu') -> list[torch.Tensor]:
     h, w = shape
-    coeffs_out = [torch.zeros((h, w), dtype=torch.float32, device=device) for _ in range(3)]
     
+    # Infer number of channels from block dimensions
     block_len = block_size * block_size
+    num_channels = blocks.shape[1] // block_len
+    
+    coeffs_out = [torch.zeros((h, w), dtype=torch.float32, device=device) for _ in range(num_channels)]
     
     for idx, (i, j) in enumerate(positions):
         block_vec = blocks[idx]
         
-        for c in range(3):
+        for c in range(num_channels):
             block_c = block_vec[c * block_len:(c + 1) * block_len]
             block_2d = block_c.reshape(block_size, block_size)
             coeffs_out[c][i:i+block_size, j:j+block_size] = block_2d
@@ -68,12 +72,12 @@ def higher_order_texture_mixing(textures: list[np.ndarray],
                                     rhos: np.ndarray,
                                     height: int = 4,
                                     order: int = 3,
-                                    n_iter: int = 10,
+                                    n_iter: int = 100,
                                     K: int = 128,
-                                    step_size: float = 0.1,
+                                    step_size: float = 1.0,
                                     barycenter_iter: int = 50,
                                     proj_iter: int = 15,
-                                    block_size: int = 12,
+                                    block_size: int = 4,
                                     device: str = 'cuda',
                                     color_space: ColorSpace = ColorSpace.RGB,
                                     verbose: bool = True) -> np.ndarray:
