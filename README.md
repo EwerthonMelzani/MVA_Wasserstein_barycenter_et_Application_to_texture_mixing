@@ -10,7 +10,7 @@ This project implements texture synthesis algorithms based on optimal transport 
 
 - First-order statistical texture mixing using sliced Wasserstein barycenters
 - Higher-order statistical mixing with spatial block structures
-- Multiple color space support (RGB, LAB, YCbCr, HSV, LUV)
+- Multiple color space support (RGB, LAB, YUV)
 - GPU acceleration via PyTorch
 - Steerable pyramid decomposition for multi-scale texture analysis
 - Configurable mixing weights for interpolation between multiple textures
